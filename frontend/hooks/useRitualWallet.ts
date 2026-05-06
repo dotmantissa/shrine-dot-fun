@@ -41,6 +41,32 @@ export function useRitualWallet() {
     }
   }, []);
 
+  const disconnect = useCallback(async () => {
+    try {
+      setBusy(true);
+      setError("");
+      const provider = getEthereum();
+      if (provider) {
+        try {
+          await provider.request({
+            method: "wallet_revokePermissions",
+            params: [{ eth_accounts: {} }],
+          });
+        } catch {
+          // Some wallets do not support permission revocation.
+        }
+      }
+      setAccount(null);
+      setChainId(null);
+      return true;
+    } catch (err: any) {
+      setError(err?.message || "Wallet disconnect failed");
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
   useEffect(() => {
     refresh();
     const provider = getEthereum();
@@ -89,5 +115,5 @@ export function useRitualWallet() {
     return `${account.slice(0, 6)}...${account.slice(-4)}`;
   }, [account]);
 
-  return { account, shortAccount, isConnected, isRitual, busy, error, connect, refresh };
+  return { account, shortAccount, isConnected, isRitual, busy, error, connect, disconnect, refresh };
 }

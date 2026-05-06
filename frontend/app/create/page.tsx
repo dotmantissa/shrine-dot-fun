@@ -89,6 +89,7 @@ export default function CreatePage() {
               busy={wallet.busy}
               shortAccount={wallet.shortAccount}
               onConnect={wallet.connect}
+              onDisconnect={wallet.disconnect}
             />
             <button onClick={() => router.push("/")} style={{ border: "1px solid var(--line)", background: "transparent", color: "var(--mid)", padding: "6px 10px", cursor: "pointer", letterSpacing: ".08em", textTransform: "uppercase", font: "400 10px 'DM Mono', monospace" }}>Back</button>
           </div>

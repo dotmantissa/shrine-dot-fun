@@ -178,6 +178,7 @@ export default function HomePage() {
               busy={wallet.busy}
               shortAccount={wallet.shortAccount}
               onConnect={wallet.connect}
+              onDisconnect={wallet.disconnect}
             />
             <button
               className="cta"
