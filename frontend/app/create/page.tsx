@@ -2,25 +2,38 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import WalletConnectButton from "../../components/WalletConnectButton";
+import { useRitualWallet } from "../../hooks/useRitualWallet";
 
 export default function CreatePage() {
   const router = useRouter();
+  const wallet = useRitualWallet();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", symbol: "", description: "", twitterHandle: "" });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError("");
+    if (!wallet.isConnected || !wallet.isRitual) {
+      const ok = await wallet.connect();
+      if (!ok) {
+        setError("Connect wallet and switch to Ritual testnet to continue.");
+        return;
+      }
+    }
     setLoading(true);
     const res = await fetch("/api/tokens", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, wallet: wallet.account }),
     });
     const data = await res.json();
     if (data?.token?.address) {
       router.push(`/${data.token.address}`);
       return;
     }
+    setError(data?.error || "Launch failed.");
     setLoading(false);
   }
 
@@ -29,7 +42,16 @@ export default function CreatePage() {
       <div style={{ maxWidth: 780, margin: "0 auto", border: "1px solid var(--line)", background: "var(--parch)" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ font: "700 22px 'Playfair Display', serif", color: "var(--ink)" }}>Launch a Coin</div>
-          <button onClick={() => router.push("/")} style={{ border: "1px solid var(--line)", background: "transparent", color: "var(--mid)", padding: "6px 10px", cursor: "pointer", letterSpacing: ".08em", textTransform: "uppercase", font: "400 10px 'DM Mono', monospace" }}>Back</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <WalletConnectButton
+              isConnected={wallet.isConnected}
+              isRitual={wallet.isRitual}
+              busy={wallet.busy}
+              shortAccount={wallet.shortAccount}
+              onConnect={wallet.connect}
+            />
+            <button onClick={() => router.push("/")} style={{ border: "1px solid var(--line)", background: "transparent", color: "var(--mid)", padding: "6px 10px", cursor: "pointer", letterSpacing: ".08em", textTransform: "uppercase", font: "400 10px 'DM Mono', monospace" }}>Back</button>
+          </div>
         </div>
 
         <form onSubmit={onSubmit} style={{ padding: "18px 20px", display: "grid", gap: "12px" }}>
@@ -56,6 +78,11 @@ export default function CreatePage() {
             </button>
             {loading && <span style={{ font: "italic 13px 'Playfair Display', serif", color: "var(--deep)" }}>AI is analyzing your coin (est. 10-15s)</span>}
           </div>
+          {(error || wallet.error) && (
+            <div style={{ font: "400 11px 'DM Mono', monospace", color: "var(--accent)" }}>
+              {error || wallet.error}
+            </div>
+          )}
         </form>
       </div>
     </main>

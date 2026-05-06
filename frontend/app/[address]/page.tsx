@@ -6,6 +6,8 @@ import AIVibeScore from "../../components/AIVibeScore";
 import BondingCurveChart from "../../components/BondingCurveChart";
 import SocialPulse from "../../components/SocialPulse";
 import TradePanel from "../../components/TradePanel";
+import WalletConnectButton from "../../components/WalletConnectButton";
+import { useRitualWallet } from "../../hooks/useRitualWallet";
 
 type Token = {
   address: string;
@@ -22,6 +24,7 @@ type Token = {
 
 export default function TokenPage({ params }: { params: { address: string } }) {
   const router = useRouter();
+  const wallet = useRitualWallet();
   const [token, setToken] = useState<Token | null>(null);
   const [trades, setTrades] = useState<Array<{ side: string; amount: string; at: number }>>([]);
   const [points, setPoints] = useState<Array<{ t: number; p: number }>>([]);
@@ -38,10 +41,12 @@ export default function TokenPage({ params }: { params: { address: string } }) {
   }, [params.address]);
 
   async function refreshScore() {
+    const ok = wallet.isConnected && wallet.isRitual ? true : await wallet.connect();
+    if (!ok) return;
     await fetch("/api/refresh-score", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token: params.address }),
+      body: JSON.stringify({ token: params.address, wallet: wallet.account }),
     });
     await load();
   }
@@ -56,7 +61,16 @@ export default function TokenPage({ params }: { params: { address: string } }) {
             <h1 style={{ margin: 0, font: "700 24px 'Playfair Display', serif", color: "var(--ink)" }}>{token.name}</h1>
             <span style={{ font: "400 12px 'DM Mono', monospace", color: "var(--mid)" }}>{token.symbol}</span>
           </div>
-          <button onClick={() => router.push("/")} style={{ border: "1px solid var(--line)", background: "transparent", color: "var(--mid)", padding: "6px 10px", cursor: "pointer", letterSpacing: ".08em", textTransform: "uppercase", font: "400 10px 'DM Mono', monospace" }}>Back to Feed</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <WalletConnectButton
+              isConnected={wallet.isConnected}
+              isRitual={wallet.isRitual}
+              busy={wallet.busy}
+              shortAccount={wallet.shortAccount}
+              onConnect={wallet.connect}
+            />
+            <button onClick={() => router.push("/")} style={{ border: "1px solid var(--line)", background: "transparent", color: "var(--mid)", padding: "6px 10px", cursor: "pointer", letterSpacing: ".08em", textTransform: "uppercase", font: "400 10px 'DM Mono', monospace" }}>Back to Feed</button>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr 0.9fr", gap: 12, padding: 12 }}>
@@ -80,7 +94,17 @@ export default function TokenPage({ params }: { params: { address: string } }) {
             </div>
           </div>
 
-          <TradePanel token={{ address: token.address, price: token.price }} onUpdated={(next) => setToken((t) => t ? ({ ...t, ...next }) : t)} />
+          <TradePanel
+            token={{ address: token.address, price: token.price }}
+            wallet={{
+              account: wallet.account,
+              isConnected: wallet.isConnected,
+              isRitual: wallet.isRitual,
+              connect: wallet.connect,
+              error: wallet.error,
+            }}
+            onUpdated={(next) => setToken((t) => t ? ({ ...t, ...next }) : t)}
+          />
         </div>
       </div>
     </main>

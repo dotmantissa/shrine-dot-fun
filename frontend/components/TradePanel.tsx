@@ -4,9 +4,17 @@ import { useMemo, useState } from "react";
 
 export default function TradePanel({
   token,
+  wallet,
   onUpdated,
 }: {
   token: { address: string; price: string };
+  wallet: {
+    account: string | null;
+    isConnected: boolean;
+    isRitual: boolean;
+    connect: () => Promise<boolean>;
+    error: string;
+  };
   onUpdated: (next: { price: string; curve: number; signal: string; change24h: string }) => void;
 }) {
   const [side, setSide] = useState<"buy" | "sell">("buy");
@@ -22,12 +30,19 @@ export default function TradePanel({
   }, [amount, token.price]);
 
   async function execute() {
+    if (!wallet.isConnected || !wallet.isRitual) {
+      const ok = await wallet.connect();
+      if (!ok) {
+        setMsg("Connect wallet and switch to Ritual testnet.");
+        return;
+      }
+    }
     setBusy(true);
     setMsg("");
     const res = await fetch("/api/trade", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token: token.address, side, amount }),
+      body: JSON.stringify({ token: token.address, side, amount, wallet: wallet.account }),
     });
     const data = await res.json();
     setBusy(false);
@@ -50,6 +65,7 @@ export default function TradePanel({
       <div style={{ font: "400 11px 'DM Mono', monospace", color: "var(--deep)" }}>You will receive: {estimatedTokens} tokens</div>
       <button style={{ border: "1px solid var(--ink)", background: "var(--ink)", color: "var(--parch)", padding: "8px 10px", cursor: "pointer", letterSpacing: ".1em", textTransform: "uppercase", font: "500 11px 'Jost', sans-serif" }} disabled={busy} onClick={execute}>{busy ? "Executing..." : "Execute trade"}</button>
       {msg && <div style={{ font: "400 10px 'DM Mono', monospace", color: "var(--mid)" }}>{msg}</div>}
+      {!msg && wallet.error && <div style={{ font: "400 10px 'DM Mono', monospace", color: "var(--accent)" }}>{wallet.error}</div>}
     </div>
   );
 }

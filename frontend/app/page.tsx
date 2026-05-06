@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import WalletConnectButton from "../components/WalletConnectButton";
+import { useRitualWallet } from "../hooks/useRitualWallet";
 
 type Token = {
   address: string;
@@ -32,6 +34,7 @@ const TICKER = [
 
 export default function HomePage() {
   const router = useRouter();
+  const wallet = useRitualWallet();
   const [isDark, setIsDark] = useState(false);
   const [insightIndex, setInsightIndex] = useState(0);
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -151,7 +154,23 @@ export default function HomePage() {
             <a href="#" onClick={(e) => { e.preventDefault(); setTab("Graduated"); }}>Graduated</a>
             <a href="#" onClick={(e) => { e.preventDefault(); window.alert("Shrine.fun: launch, trade, and graduate meme coins with Ritual-native AI scoring."); }}>About</a>
             <button id="theme-toggle" aria-label="Toggle dark mode" className="theme" onClick={toggleTheme}>{icon()}</button>
-            <button className="cta" onClick={() => router.push("/create")}>Launch a coin</button>
+            <WalletConnectButton
+              isConnected={wallet.isConnected}
+              isRitual={wallet.isRitual}
+              busy={wallet.busy}
+              shortAccount={wallet.shortAccount}
+              onConnect={wallet.connect}
+            />
+            <button
+              className="cta"
+              onClick={async () => {
+                const ok = wallet.isConnected && wallet.isRitual ? true : await wallet.connect();
+                if (!ok) return;
+                router.push("/create");
+              }}
+            >
+              Launch a coin
+            </button>
           </div>
         </div>
 
