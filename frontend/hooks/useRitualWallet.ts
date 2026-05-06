@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { connectRitualWallet, getEthereum, RITUAL_CHAIN_HEX } from "../lib/wallet";
+import { connectRitualWallet, ensureRitualNetwork, getEthereum, RITUAL_CHAIN_HEX } from "../lib/wallet";
 
 export function useRitualWallet() {
   const [account, setAccount] = useState<string | null>(null);
@@ -57,6 +57,32 @@ export function useRitualWallet() {
       provider.removeListener?.("chainChanged", onChainChanged);
     };
   }, [refresh]);
+
+  useEffect(() => {
+    if (!account) return;
+    if (!chainId || chainId.toLowerCase() === RITUAL_CHAIN_HEX) return;
+
+    const provider = getEthereum();
+    if (!provider) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        setBusy(true);
+        setError("");
+        await ensureRitualNetwork(provider);
+        if (!cancelled) setChainId(RITUAL_CHAIN_HEX);
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message || "Please switch to Ritual testnet.");
+      } finally {
+        if (!cancelled) setBusy(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [account, chainId]);
 
   const shortAccount = useMemo(() => {
     if (!account) return "";
