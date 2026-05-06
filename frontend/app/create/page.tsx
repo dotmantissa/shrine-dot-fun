@@ -4,13 +4,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import WalletConnectButton from "../../components/WalletConnectButton";
 import { useRitualWallet } from "../../hooks/useRitualWallet";
+import { contracts } from "../../lib/contracts";
+import { launchTokenOnchain } from "../../lib/onchain";
 
 export default function CreatePage() {
   const router = useRouter();
   const wallet = useRitualWallet();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", symbol: "", description: "", twitterHandle: "" });
+  const [form, setForm] = useState({ name: "", symbol: "", description: "", twitterHandle: "", totalTokensToMint: "" });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,19 +24,34 @@ export default function CreatePage() {
         return;
       }
     }
-    setLoading(true);
-    const res = await fetch("/api/tokens", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...form, wallet: wallet.account }),
-    });
-    const data = await res.json();
-    if (data?.token?.address) {
-      router.push(`/${data.token.address}`);
+    if (!contracts.shrineFactory) {
+      setError("Factory contract is not configured.");
       return;
     }
-    setError(data?.error || "Launch failed.");
-    setLoading(false);
+    if (!wallet.account) {
+      setError("Wallet account is unavailable.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const launched = await launchTokenOnchain({
+        factory: contracts.shrineFactory,
+        account: wallet.account as `0x${string}`,
+        name: form.name,
+        symbol: form.symbol,
+        description: form.description,
+        imageURI: "",
+        twitterHandle: form.twitterHandle,
+        totalTokensToMint: form.totalTokensToMint,
+      });
+      router.push(`/${launched.token}`);
+      return;
+    } catch (e: any) {
+      setError(e?.message || "Launch failed.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -70,6 +87,15 @@ export default function CreatePage() {
           <label style={{ display: "grid", gap: 4 }}>
             <span style={{ font: "400 10px 'DM Mono', monospace", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--mid)" }}>Twitter Handle</span>
             <input style={{ border: "1px solid var(--line)", padding: "10px", background: "transparent", color: "var(--ink)" }} placeholder="@spiritmoth" value={form.twitterHandle} onChange={(e) => setForm((f) => ({ ...f, twitterHandle: e.target.value }))} />
+          </label>
+          <label style={{ display: "grid", gap: 4 }}>
+            <span style={{ font: "400 10px 'DM Mono', monospace", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--mid)" }}>Total Tokens To Mint (On-chain)</span>
+            <input
+              style={{ border: "1px solid var(--line)", padding: "10px", background: "transparent", color: "var(--ink)" }}
+              placeholder="1000000"
+              value={form.totalTokensToMint}
+              onChange={(e) => setForm((f) => ({ ...f, totalTokensToMint: e.target.value }))}
+            />
           </label>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>

@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { buyOnchain, sellOnchain } from "../lib/onchain";
 
 export default function TradePanel({
   token,
   wallet,
   onUpdated,
 }: {
-  token: { address: string; price: string };
+  token: { address: string; curveAddress: string; price: string };
   wallet: {
     account: string | null;
     isConnected: boolean;
@@ -15,7 +16,7 @@ export default function TradePanel({
     connect: () => Promise<boolean>;
     error: string;
   };
-  onUpdated: (next: { price: string; curve: number; signal: string; change24h: string }) => void;
+  onUpdated: () => void;
 }) {
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("1");
@@ -37,21 +38,34 @@ export default function TradePanel({
         return;
       }
     }
-    setBusy(true);
-    setMsg("");
-    const res = await fetch("/api/trade", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ token: token.address, side, amount, wallet: wallet.account }),
-    });
-    const data = await res.json();
-    setBusy(false);
-    if (!res.ok) {
-      setMsg(data.error || "Trade failed");
+    if (!wallet.account) {
+      setMsg("Wallet account unavailable.");
       return;
     }
-    onUpdated(data.token);
-    setMsg(`Executed ${side.toUpperCase()} · impact ${data.priceImpact}%`);
+    setBusy(true);
+    setMsg("");
+    try {
+      if (side === "buy") {
+        await buyOnchain({
+          curve: token.curveAddress as `0x${string}`,
+          account: wallet.account as `0x${string}`,
+          ritualAmount: amount,
+        });
+      } else {
+        await sellOnchain({
+          curve: token.curveAddress as `0x${string}`,
+          token: token.address as `0x${string}`,
+          account: wallet.account as `0x${string}`,
+          tokenAmount: amount,
+        });
+      }
+      setMsg(`Executed ${side.toUpperCase()} on-chain.`);
+      onUpdated();
+    } catch (e: any) {
+      setMsg(e?.message || "Trade failed");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -61,8 +75,10 @@ export default function TradePanel({
         <button style={{ border: "1px solid var(--line)", padding: "6px 8px", background: side === "buy" ? "var(--stone)" : "transparent", color: "var(--ink)", cursor: "pointer" }} onClick={() => setSide("buy")}>Buy</button>
         <button style={{ border: "1px solid var(--line)", padding: "6px 8px", background: side === "sell" ? "var(--stone)" : "transparent", color: "var(--ink)", cursor: "pointer" }} onClick={() => setSide("sell")}>Sell</button>
       </div>
-      <input style={{ border: "1px solid var(--line)", padding: 8, background: "transparent", color: "var(--ink)" }} placeholder="Amount RITUAL" value={amount} onChange={(e) => setAmount(e.target.value)} />
-      <div style={{ font: "400 11px 'DM Mono', monospace", color: "var(--deep)" }}>You will receive: {estimatedTokens} tokens</div>
+      <input style={{ border: "1px solid var(--line)", padding: 8, background: "transparent", color: "var(--ink)" }} placeholder={side === "buy" ? "Amount RITUAL" : "Amount TOKEN"} value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <div style={{ font: "400 11px 'DM Mono', monospace", color: "var(--deep)" }}>
+        {side === "buy" ? `You will receive: ${estimatedTokens} tokens` : "Sell uses token amount input"}
+      </div>
       <button style={{ border: "1px solid var(--ink)", background: "var(--ink)", color: "var(--parch)", padding: "8px 10px", cursor: "pointer", letterSpacing: ".1em", textTransform: "uppercase", font: "500 11px 'Jost', sans-serif" }} disabled={busy} onClick={execute}>{busy ? "Executing..." : "Execute trade"}</button>
       {msg && <div style={{ font: "400 10px 'DM Mono', monospace", color: "var(--mid)" }}>{msg}</div>}
       {!msg && wallet.error && <div style={{ font: "400 10px 'DM Mono', monospace", color: "var(--accent)" }}>{wallet.error}</div>}

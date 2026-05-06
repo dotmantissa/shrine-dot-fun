@@ -1,9 +1,27 @@
 import { createPublicClient, getAddress, http, parseAbiItem } from "viem";
 import { chainConfig } from "./contracts";
-import type { TokenRecord } from "./store";
+
+export type ChainToken = {
+  address: string;
+  curveAddress: string;
+  emoji: string;
+  name: string;
+  symbol: string;
+  price: string;
+  change24h: string;
+  vibe: number;
+  curve: number;
+  signal: "AI Pick" | "Graduating" | "Rug risk" | "New";
+  description: string;
+  twitterHandle: string;
+  createdAt: number;
+};
 
 const tokenLaunchedEvent = parseAbiItem(
   "event TokenLaunched(address indexed token, address indexed curve, address indexed creator, uint256 timestamp, string twitterHandle)"
+);
+const tradeEvent = parseAbiItem(
+  "event Trade(address indexed trader, bool isBuy, uint256 ritualAmount, uint256 tokenAmount, uint256 price, uint256 marketCap)"
 );
 
 const FACTORY_ABI = [
@@ -20,6 +38,19 @@ const FACTORY_ABI = [
       { name: "twitterHandle", type: "string" },
     ],
   },
+  {
+    type: "function",
+    name: "tokenToCurve",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "address" }],
+  },
+] as const;
+
+const CURVE_ABI = [
+  { type: "function", name: "getCurrentPrice", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "realRitualReserve", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "graduationThreshold", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
 
 const AIVIBE_ABI = [
@@ -38,12 +69,22 @@ const AIVIBE_ABI = [
   },
 ] as const;
 
-export async function fetchRitualTokens(limit = 25): Promise<TokenRecord[]> {
-  if (!chainConfig.shrineFactory || !chainConfig.aiVibe) return [];
+function toSignal(vibe: number, progress: number): ChainToken["signal"] {
+  if (progress >= 95) return "Graduating";
+  if (vibe > 85) return "AI Pick";
+  if (vibe < 35) return "Rug risk";
+  return "New";
+}
 
-  const client = createPublicClient({ transport: http(chainConfig.rpc) });
+function createClient() {
+  return createPublicClient({ transport: http(chainConfig.rpc) });
+}
+
+export async function fetchRitualTokens(limit = 25): Promise<ChainToken[]> {
+  if (!chainConfig.shrineFactory) return [];
+  const client = createClient();
   const latest = await client.getBlockNumber();
-  const fromBlock = latest > 50_000n ? latest - 50_000n : 0n;
+  const fromBlock = latest > 100_000n ? latest - 100_000n : 0n;
 
   const logs = await client.getLogs({
     address: getAddress(chainConfig.shrineFactory),
@@ -53,16 +94,20 @@ export async function fetchRitualTokens(limit = 25): Promise<TokenRecord[]> {
   });
 
   const newest = logs.slice(-limit).reverse();
-  const out: TokenRecord[] = [];
+  const out: ChainToken[] = [];
 
   for (const log of newest) {
     const tokenArg = log.args.token;
-    if (!tokenArg) continue;
+    const curveArg = log.args.curve;
+    if (!tokenArg || !curveArg) continue;
+
     const token = getAddress(tokenArg);
+    const curve = getAddress(curveArg);
 
     let meta: readonly [string, string, string, string, string] = ["Unknown", "$UNK", "", "", ""];
     let vibe = 50;
-    let signal: TokenRecord["signal"] = "New";
+    let price = "0.00000000";
+    let progress = 0;
 
     try {
       const m = await client.readContract({
@@ -75,27 +120,52 @@ export async function fetchRitualTokens(limit = 25): Promise<TokenRecord[]> {
     } catch {}
 
     try {
-      const s = await client.readContract({
-        address: getAddress(chainConfig.aiVibe),
-        abi: AIVIBE_ABI,
-        functionName: "scores",
-        args: [token],
-      });
-      vibe = Number(s[0]);
-      if (vibe > 85) signal = "AI Pick";
-      if (vibe < 35) signal = "Rug risk";
+      const p = (await client.readContract({
+        address: curve,
+        abi: CURVE_ABI,
+        functionName: "getCurrentPrice",
+      })) as bigint;
+      price = (Number(p) / 1e18).toFixed(8);
+
+      const reserve = (await client.readContract({
+        address: curve,
+        abi: CURVE_ABI,
+        functionName: "realRitualReserve",
+      })) as bigint;
+
+      const threshold = (await client.readContract({
+        address: curve,
+        abi: CURVE_ABI,
+        functionName: "graduationThreshold",
+      })) as bigint;
+
+      progress = threshold > 0n ? Number((reserve * 10000n) / threshold) / 100 : 0;
+      if (progress > 100) progress = 100;
     } catch {}
+
+    if (chainConfig.aiVibe) {
+      try {
+        const s = await client.readContract({
+          address: getAddress(chainConfig.aiVibe),
+          abi: AIVIBE_ABI,
+          functionName: "scores",
+          args: [token],
+        });
+        vibe = Number(s[0]);
+      } catch {}
+    }
 
     out.push({
       address: token,
+      curveAddress: curve,
       emoji: "⛩️",
       name: meta[0] || "Unknown",
       symbol: meta[1] || "$UNK",
-      price: "0.00000000",
+      price,
       change24h: "+0%",
       vibe,
-      curve: 0,
-      signal,
+      curve: Math.round(progress),
+      signal: toSignal(vibe, progress),
       description: meta[2] || "",
       twitterHandle: meta[4] || "",
       createdAt: Number(log.args.timestamp ?? 0n) * 1000 || Date.now(),
@@ -103,4 +173,73 @@ export async function fetchRitualTokens(limit = 25): Promise<TokenRecord[]> {
   }
 
   return out;
+}
+
+export async function fetchRitualTokenByAddress(address: string) {
+  if (!chainConfig.shrineFactory) return null;
+  const client = createClient();
+  const token = getAddress(address);
+
+  const curve = (await client.readContract({
+    address: getAddress(chainConfig.shrineFactory),
+    abi: FACTORY_ABI,
+    functionName: "tokenToCurve",
+    args: [token],
+  })) as `0x${string}`;
+
+  if (!curve || curve === "0x0000000000000000000000000000000000000000") return null;
+
+  const all = await fetchRitualTokens(200);
+  const found = all.find((t) => t.address.toLowerCase() === token.toLowerCase());
+  if (found) return found;
+
+  const meta = await client.readContract({
+    address: getAddress(chainConfig.shrineFactory),
+    abi: FACTORY_ABI,
+    functionName: "metadata",
+    args: [token],
+  }) as readonly [string, string, string, string, string];
+
+  return {
+    address: token,
+    curveAddress: curve,
+    emoji: "⛩️",
+    name: meta[0],
+    symbol: meta[1],
+    description: meta[2],
+    twitterHandle: meta[4],
+    price: "0.00000000",
+    change24h: "+0%",
+    vibe: 50,
+    curve: 0,
+    signal: "New" as const,
+    createdAt: Date.now(),
+  };
+}
+
+export async function fetchRitualTrades(curveAddress: string, fromBlockLookback = 50_000n) {
+  const client = createClient();
+  const latest = await client.getBlockNumber();
+  const fromBlock = latest > fromBlockLookback ? latest - fromBlockLookback : 0n;
+
+  const logs = await client.getLogs({
+    address: getAddress(curveAddress),
+    event: tradeEvent,
+    fromBlock,
+    toBlock: "latest",
+  });
+
+  const trades = logs.slice(-80).reverse().map((l) => ({
+    side: l.args.isBuy ? "buy" : "sell",
+    amount: ((l.args.ritualAmount ?? 0n) / 10n ** 18n).toString(),
+    at: Date.now(),
+    price: Number(l.args.price ?? 0n) / 1e18,
+  }));
+
+  const points = trades
+    .slice()
+    .reverse()
+    .map((t, i) => ({ t: Date.now() - (trades.length - i) * 12_000, p: t.price || 0 }));
+
+  return { trades, points };
 }

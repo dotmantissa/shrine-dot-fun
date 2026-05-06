@@ -11,6 +11,7 @@ import { useRitualWallet } from "../../hooks/useRitualWallet";
 
 type Token = {
   address: string;
+  curveAddress: string;
   name: string;
   symbol: string;
   description: string;
@@ -95,7 +96,7 @@ export default function TokenPage({ params }: { params: { address: string } }) {
           </div>
 
           <TradePanel
-            token={{ address: token.address, price: token.price }}
+            token={{ address: token.address, curveAddress: token.curveAddress, price: token.price }}
             wallet={{
               account: wallet.account,
               isConnected: wallet.isConnected,
@@ -103,7 +104,7 @@ export default function TokenPage({ params }: { params: { address: string } }) {
               connect: wallet.connect,
               error: wallet.error,
             }}
-            onUpdated={(next) => setToken((t) => t ? ({ ...t, ...next }) : t)}
+            onUpdated={load}
           />
         </div>
       </div>

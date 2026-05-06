@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { readPriceHistory, readStore, readTrades } from "../../../../lib/backend/store";
+import { fetchRitualTokenByAddress, fetchRitualTrades } from "../../../../lib/backend/ritual";
 
 export async function GET(_: Request, { params }: { params: { address: string } }) {
-  const token = readStore().find((t) => t.address.toLowerCase() === params.address.toLowerCase());
+  const token = await fetchRitualTokenByAddress(params.address);
   if (!token) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const trades = readTrades(token.address);
-  const points = readPriceHistory(token.address);
-  return NextResponse.json({ token, trades, points });
+
+  const market = await fetchRitualTrades(token.curveAddress);
+  return NextResponse.json({ token, trades: market.trades, points: market.points });
 }
