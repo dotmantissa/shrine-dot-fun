@@ -85,6 +85,7 @@ export async function launchTokenOnchain(args: {
     functionName: "deployToken",
     args: [args.name, args.symbol, args.description, args.imageURI, args.twitterHandle],
     account: getAddress(args.account),
+    type: "eip1559",
     chain: null,
   });
 
@@ -118,6 +119,7 @@ export async function launchTokenOnchain(args: {
         args: [minOut],
         value,
         account: getAddress(args.account),
+        type: "eip1559",
         chain: null,
       });
       await pub.waitForTransactionReceipt({ hash: buyHash });
@@ -141,6 +143,7 @@ export async function buyOnchain(args: {
     args: [0n],
     value,
     account: getAddress(args.account),
+    type: "eip1559",
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash });
@@ -162,6 +165,7 @@ export async function sellOnchain(args: {
     functionName: "approve",
     args: [getAddress(args.curve), amount],
     account: getAddress(args.account),
+    type: "eip1559",
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash: approveHash });
@@ -172,6 +176,7 @@ export async function sellOnchain(args: {
     functionName: "sell",
     args: [amount, 0n],
     account: getAddress(args.account),
+    type: "eip1559",
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash: sellHash });
