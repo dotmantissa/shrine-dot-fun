@@ -80,25 +80,70 @@ function createClient() {
   return createPublicClient({ transport: http(chainConfig.rpc) });
 }
 
+async function getLaunchedLogsChunked(
+  client: ReturnType<typeof createClient>,
+  factory: `0x${string}`,
+  fromBlock: bigint,
+  toBlock: bigint,
+) {
+  const step = 95_000n;
+  const all: Awaited<ReturnType<typeof client.getLogs>> = [];
+  let cursor = fromBlock;
+
+  while (cursor <= toBlock) {
+    const end = cursor + step < toBlock ? cursor + step : toBlock;
+    const part = await client.getLogs({
+      address: factory,
+      event: tokenLaunchedEvent,
+      fromBlock: cursor,
+      toBlock: end,
+    });
+    all.push(...part);
+    cursor = end + 1n;
+  }
+
+  return all;
+}
+
+async function getTradeLogsChunked(
+  client: ReturnType<typeof createClient>,
+  curve: `0x${string}`,
+  fromBlock: bigint,
+  toBlock: bigint,
+) {
+  const step = 95_000n;
+  const all: Awaited<ReturnType<typeof client.getLogs>> = [];
+  let cursor = fromBlock;
+
+  while (cursor <= toBlock) {
+    const end = cursor + step < toBlock ? cursor + step : toBlock;
+    const part = await client.getLogs({
+      address: curve,
+      event: tradeEvent,
+      fromBlock: cursor,
+      toBlock: end,
+    });
+    all.push(...part);
+    cursor = end + 1n;
+  }
+
+  return all;
+}
+
 export async function fetchRitualTokens(limit = 25): Promise<ChainToken[]> {
   if (!chainConfig.shrineFactory) return [];
   const client = createClient();
   const latest = await client.getBlockNumber();
-  const fromBlock = latest > 100_000n ? latest - 100_000n : 0n;
-
-  const logs = await client.getLogs({
-    address: getAddress(chainConfig.shrineFactory),
-    event: tokenLaunchedEvent,
-    fromBlock,
-    toBlock: "latest",
-  });
+  const fromBlock = latest > 500_000n ? latest - 500_000n : 0n;
+  const logs = await getLaunchedLogsChunked(client, getAddress(chainConfig.shrineFactory), fromBlock, latest);
 
   const newest = logs.slice(-limit).reverse();
   const out: ChainToken[] = [];
 
   for (const log of newest) {
-    const tokenArg = log.args.token;
-    const curveArg = log.args.curve;
+    const args = (log as any).args ?? {};
+    const tokenArg = args.token as string | undefined;
+    const curveArg = args.curve as string | undefined;
     if (!tokenArg || !curveArg) continue;
 
     const token = getAddress(tokenArg);
@@ -168,7 +213,7 @@ export async function fetchRitualTokens(limit = 25): Promise<ChainToken[]> {
       signal: toSignal(vibe, progress),
       description: meta[2] || "",
       twitterHandle: meta[4] || "",
-      createdAt: Number(log.args.timestamp ?? 0n) * 1000 || Date.now(),
+      createdAt: Number(args.timestamp ?? 0n) * 1000 || Date.now(),
     });
   }
 
@@ -221,20 +266,16 @@ export async function fetchRitualTrades(curveAddress: string, fromBlockLookback 
   const client = createClient();
   const latest = await client.getBlockNumber();
   const fromBlock = latest > fromBlockLookback ? latest - fromBlockLookback : 0n;
+  const logs = await getTradeLogsChunked(client, getAddress(curveAddress), fromBlock, latest);
 
-  const logs = await client.getLogs({
-    address: getAddress(curveAddress),
-    event: tradeEvent,
-    fromBlock,
-    toBlock: "latest",
-  });
-
-  const trades = logs.slice(-80).reverse().map((l) => ({
-    side: l.args.isBuy ? "buy" : "sell",
-    amount: ((l.args.ritualAmount ?? 0n) / 10n ** 18n).toString(),
+  const trades = logs.slice(-80).reverse().map((l) => {
+    const args = (l as any).args ?? {};
+    return {
+    side: args.isBuy ? "buy" : "sell",
+    amount: ((args.ritualAmount ?? 0n) / 10n ** 18n).toString(),
     at: Date.now(),
-    price: Number(l.args.price ?? 0n) / 1e18,
-  }));
+    price: Number(args.price ?? 0n) / 1e18,
+  };});
 
   const points = trades
     .slice()

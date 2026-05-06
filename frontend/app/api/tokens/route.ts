@@ -3,7 +3,12 @@ import { hasRuntimeContracts } from "../../../lib/backend/contracts";
 import { fetchRitualTokens } from "../../../lib/backend/ritual";
 
 export async function GET() {
-  const tokens = await fetchRitualTokens(50);
+  let tokens: Awaited<ReturnType<typeof fetchRitualTokens>> = [];
+  try {
+    tokens = await fetchRitualTokens(50);
+  } catch (e) {
+    console.error("api/tokens fetchRitualTokens failed", e);
+  }
   return NextResponse.json({
     source: "ritual-chain",
     contractsConfigured: hasRuntimeContracts(),
