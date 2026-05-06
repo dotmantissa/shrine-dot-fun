@@ -68,10 +68,11 @@ export default function HomePage() {
       if (tab === "Graduated") return t.signal === "Graduating" || t.curve >= 95;
       return true;
     });
+    const marketScore = (t: Token) => Number(t.price || "0") * (1 + t.curve / 100);
     const sorted = [...scoped].sort((a, b) => {
       if (sortBy === "vibe") return b.vibe - a.vibe;
       if (sortBy === "curve") return b.curve - a.curve;
-      return Number(b.price) - Number(a.price);
+      return marketScore(b) - marketScore(a);
     });
     return sorted;
   }, [tokens, tab, sortBy]);

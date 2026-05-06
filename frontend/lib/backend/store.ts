@@ -21,11 +21,11 @@ const TRADES_KEY = "__SHRINE_TRADES_STORE__";
 const PRICE_KEY = "__SHRINE_PRICE_STORE__";
 
 const seed: TokenRecord[] = [
-  { address: "0x00000000000000000000000000000000000000a1", emoji: "🦋", name: "Spirit Moth", symbol: "$MOTH", price: "0.00000421", change24h: "+284%", vibe: 88, curve: 72, signal: "AI Pick", description: "Meme swarm with strong community momentum.", twitterHandle: "@spiritmoth", createdAt: Date.now() - 450000 },
-  { address: "0x00000000000000000000000000000000000000a2", emoji: "👺", name: "Oni Coin", symbol: "$ONI", price: "0.00000089", change24h: "−12%", vibe: 34, curve: 12, signal: "Rug risk", description: "Volatile launch with weak buyer retention.", twitterHandle: "@onicoin", createdAt: Date.now() - 390000 },
-  { address: "0x00000000000000000000000000000000000000a3", emoji: "🐉", name: "Ghost Koi", symbol: "$GKOI", price: "0.00001337", change24h: "+1,204%", vibe: 95, curve: 97, signal: "Graduating", description: "Breakout curve and strong buy pressure.", twitterHandle: "@ghostkoi", createdAt: Date.now() - 320000 },
-  { address: "0x00000000000000000000000000000000000000a4", emoji: "🕯️", name: "Kami Candle", symbol: "$KAMI", price: "0.00000203", change24h: "+44%", vibe: 61, curve: 45, signal: "New", description: "Steady order flow, early-stage growth.", twitterHandle: "@kamicandle", createdAt: Date.now() - 220000 },
-  { address: "0x00000000000000000000000000000000000000a5", emoji: "💀", name: "Hollow Monk", symbol: "$MONK", price: "0.00000011", change24h: "−67%", vibe: 19, curve: 3, signal: "Rug risk", description: "Low-liquidity tail risk.", twitterHandle: "@hollowmonk", createdAt: Date.now() - 160000 },
+  { address: "0x00000000000000000000000000000000000000a1", emoji: "🦋", name: "Spirit Moth", symbol: "$MOTH", price: "0.00000421", change24h: "+284%", vibe: 58, curve: 72, signal: "New", description: "Meme swarm with strong community momentum.", twitterHandle: "@spiritmoth", createdAt: Date.now() - 450000 },
+  { address: "0x00000000000000000000000000000000000000a2", emoji: "👺", name: "Oni Coin", symbol: "$ONI", price: "0.00000089", change24h: "−12%", vibe: 91, curve: 12, signal: "AI Pick", description: "Volatile launch with weak buyer retention.", twitterHandle: "@onicoin", createdAt: Date.now() - 390000 },
+  { address: "0x00000000000000000000000000000000000000a3", emoji: "🐉", name: "Ghost Koi", symbol: "$GKOI", price: "0.00001337", change24h: "+1,204%", vibe: 40, curve: 97, signal: "Graduating", description: "Breakout curve and strong buy pressure.", twitterHandle: "@ghostkoi", createdAt: Date.now() - 320000 },
+  { address: "0x00000000000000000000000000000000000000a4", emoji: "🕯️", name: "Kami Candle", symbol: "$KAMI", price: "0.00000203", change24h: "+44%", vibe: 77, curve: 45, signal: "AI Pick", description: "Steady order flow, early-stage growth.", twitterHandle: "@kamicandle", createdAt: Date.now() - 220000 },
+  { address: "0x00000000000000000000000000000000000000a5", emoji: "💀", name: "Hollow Monk", symbol: "$MONK", price: "0.00000011", change24h: "−67%", vibe: 19, curve: 83, signal: "Rug risk", description: "Low-liquidity tail risk.", twitterHandle: "@hollowmonk", createdAt: Date.now() - 160000 },
 ];
 
 function getGlobal() {
