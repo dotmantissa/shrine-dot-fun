@@ -55,14 +55,26 @@ export default function TokenPage({ params }: { params: { address: string } }) {
   if (!token) return <main style={{ padding: 24, color: "var(--deep)" }}>Loading token...</main>;
 
   return (
-    <main style={{ minHeight: "100vh", padding: 24, background: "var(--parch)" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", border: "1px solid var(--line)", background: "var(--parch)" }}>
-        <div style={{ borderBottom: "1px solid var(--line)", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <main className="token-main">
+      <style>{`
+        .token-main{min-height:100vh;padding:24px;background:var(--parch)}
+        .token-card{max-width:1280px;margin:0 auto;border:1px solid var(--line);background:var(--parch)}
+        .token-head{border-bottom:1px solid var(--line);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+        .token-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .token-grid{display:grid;grid-template-columns:1fr 1.1fr .9fr;gap:12px;padding:12px}
+        @media (max-width:1024px){ .token-grid{grid-template-columns:1fr;}}
+        @media (max-width:768px){
+          .token-main{padding:12px}
+          .token-head{padding:12px}
+        }
+      `}</style>
+      <div className="token-card">
+        <div className="token-head">
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
             <h1 style={{ margin: 0, font: "700 24px 'Playfair Display', serif", color: "var(--ink)" }}>{token.name}</h1>
             <span style={{ font: "400 12px 'DM Mono', monospace", color: "var(--mid)" }}>{token.symbol}</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="token-actions">
             <WalletConnectButton
               isConnected={wallet.isConnected}
               isRitual={wallet.isRitual}
@@ -74,7 +86,7 @@ export default function TokenPage({ params }: { params: { address: string } }) {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr 0.9fr", gap: 12, padding: 12 }}>
+        <div className="token-grid">
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ border: "1px solid var(--line)", padding: 10, color: "var(--deep)", font: "400 14px 'Jost', sans-serif" }}>{token.description}</div>
             <AIVibeScore tokenAddress={token.address} size="large" score={{ vibeRating: token.vibe, rugRisk: Math.max(0, 100 - token.vibe), summary: "On-chain AI sentiment estimate.", scored: true }} onRefresh={refreshScore} />

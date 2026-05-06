@@ -55,11 +55,22 @@ export default function CreatePage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", padding: "28px", background: "var(--parch)" }}>
-      <div style={{ maxWidth: 780, margin: "0 auto", border: "1px solid var(--line)", background: "var(--parch)" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <main className="create-main">
+      <style>{`
+        .create-main{min-height:100vh;padding:28px;background:var(--parch)}
+        .create-card{max-width:780px;margin:0 auto;border:1px solid var(--line);background:var(--parch)}
+        .create-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+        .create-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        @media (max-width:768px){
+          .create-main{padding:12px}
+          .create-head{padding:12px}
+          .create-form{padding:12px !important}
+        }
+      `}</style>
+      <div className="create-card">
+        <div className="create-head">
           <div style={{ font: "700 22px 'Playfair Display', serif", color: "var(--ink)" }}>Launch a Coin</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="create-actions">
             <WalletConnectButton
               isConnected={wallet.isConnected}
               isRitual={wallet.isRitual}
@@ -71,7 +82,7 @@ export default function CreatePage() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} style={{ padding: "18px 20px", display: "grid", gap: "12px" }}>
+        <form className="create-form" onSubmit={onSubmit} style={{ padding: "18px 20px", display: "grid", gap: "12px" }}>
           <label style={{ display: "grid", gap: 4 }}>
             <span style={{ font: "400 10px 'DM Mono', monospace", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--mid)" }}>Name</span>
             <input style={{ border: "1px solid var(--line)", padding: "10px", background: "transparent", color: "var(--ink)" }} placeholder="Spirit Moth" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />

@@ -98,12 +98,12 @@ export default function HomePage() {
         :root { --parch:#F6F3EE; --stone:#E8E3DA; --line:#D4CFC6; --mid:#9A9288; --ink:#1C1915; --deep:#2E2B26; --accent:#8B2635; --accent-dim:rgba(139,38,53,0.08); --gold:#9A7B4F; --up:#2D6A2D; }
         html.dark { --parch:#0F0E0C; --stone:#1A1916; --line:#2E2B26; --mid:#6B6560; --ink:#EAE6DF; --deep:#C4BFB7; --accent:#C0404F; --accent-dim:rgba(192,64,79,0.10); --gold:#B8965E; --up:#3D8B3D; }
         *{box-sizing:border-box;border-radius:0}
-        html,body{margin:0;background:var(--parch);color:var(--ink);height:540px;overflow:hidden}
+        html,body{margin:0;background:var(--parch);color:var(--ink);min-height:100vh;overflow-x:hidden}
         a{text-decoration:none;color:inherit}
-        .wrap{height:540px;display:flex;flex-direction:column;border:1px solid var(--line)}
-        .header{height:60px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+        .wrap{min-height:100vh;display:flex;flex-direction:column;border:1px solid var(--line)}
+        .header{min-height:60px;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:12px;flex-wrap:wrap}
         .logo{font:700 17px "Playfair Display", serif}.dot{color:var(--accent)}
-        .nav{display:flex;align-items:center;gap:16px}
+        .nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
         .nav a{font:400 11px "Jost",sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mid)}
         .nav a:hover{color:var(--ink)}
         .theme{width:28px;height:28px;border:0;background:var(--stone);color:var(--mid);display:grid;place-items:center;cursor:pointer;transition:background .2s,color .2s}
@@ -113,16 +113,17 @@ export default function HomePage() {
         .dotx{width:5px;height:5px;background:var(--accent)}
         .ail{font:500 9px "DM Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
         .ins{font:italic 12px "Playfair Display",serif;color:var(--deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:1;transition:opacity .4s}
-        .tabs{height:40px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px}
-        .tleft{display:flex;align-items:center;gap:10px}
+        .tabs{min-height:40px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:8px 24px;gap:8px;flex-wrap:wrap}
+        .tleft{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
         .tab{font:400 10px "Jost",sans-serif;letter-spacing:.15em;text-transform:uppercase;color:var(--mid);padding-bottom:7px;border-bottom:1px solid transparent;background:transparent;border-left:0;border-right:0;border-top:0;cursor:pointer}
         .tab.active{color:var(--ink);border-color:var(--ink)}
         .divi{width:1px;height:14px;background:var(--line)}
         .sort{font:400 9px "DM Mono",monospace;color:var(--mid);border:1px solid var(--line);background:transparent;padding:4px 6px}
-        .ghead{height:28px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:2fr 1.2fr .8fr .8fr 1fr .7fr;align-items:center;padding:0 24px;font:400 9px "DM Mono",monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--mid)}
+        .ghead{height:28px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:2fr 1.2fr .8fr .8fr 1fr .7fr;align-items:center;padding:0 24px;font:400 9px "DM Mono",monospace;letter-spacing:.15em;text-transform:uppercase;color:var(--mid);min-width:760px}
         .r{text-align:right}
+        .table{overflow-x:auto}
         .list{flex:1;overflow:auto}
-        .row{display:grid;grid-template-columns:2fr 1.2fr .8fr .8fr 1fr .7fr;align-items:center;padding:11px 24px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s}
+        .row{display:grid;grid-template-columns:2fr 1.2fr .8fr .8fr 1fr .7fr;align-items:center;padding:11px 24px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;min-width:760px}
         .row:hover{background:var(--stone)}
         .coin{display:flex;align-items:center;gap:10px}
         .tile{width:28px;height:28px;border:1px solid var(--line);background:var(--stone);display:grid;place-items:center}
@@ -144,6 +145,15 @@ export default function HomePage() {
         .foot{height:32px;border-top:1px solid var(--line);background:var(--parch);padding:8px 24px;overflow:hidden}
         .marq{display:inline-block;white-space:nowrap;animation:scroll 25s linear infinite;font:400 9px "DM Mono",monospace}
         .sep{color:var(--line);padding:0 10px}.neu{color:var(--mid)}
+        @media (max-width: 768px){
+          .header{padding:12px}
+          .nav a{font-size:10px}
+          .cta{padding:8px 12px}
+          .narrator{padding:0 12px}
+          .tabs{padding:8px 12px}
+          .ghead,.row{padding-left:12px;padding-right:12px}
+          .foot{padding:8px 12px}
+        }
         @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
       `}</style>
 
@@ -191,9 +201,10 @@ export default function HomePage() {
           </select>
         </div>
 
-        <div className="ghead"><div>Coin</div><div className="r">Price</div><div className="r">24h</div><div className="r">Vibe</div><div className="r">Curve</div><div className="r">Signal</div></div>
-        <div className="list">
-          {visibleTokens.map((t) => {
+        <div className="table">
+          <div className="ghead"><div>Coin</div><div className="r">Price</div><div className="r">24h</div><div className="r">Vibe</div><div className="r">Curve</div><div className="r">Signal</div></div>
+          <div className="list">
+            {visibleTokens.map((t) => {
             const vibeColor = t.vibe >= 70 ? "var(--up)" : t.vibe <= 40 ? "var(--accent)" : "var(--gold)";
             const signalClass = t.signal === "Rug risk" ? "sig-bad" : t.signal === "New" ? "sig-new" : "sig-good";
             return (
@@ -206,7 +217,8 @@ export default function HomePage() {
                 <div className={`sig ${signalClass}`}>{t.signal}</div>
               </div>
             );
-          })}
+            })}
+          </div>
         </div>
 
         <div className="foot">
