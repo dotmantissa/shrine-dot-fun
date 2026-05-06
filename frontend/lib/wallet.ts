@@ -1,5 +1,17 @@
 export const RITUAL_CHAIN_ID = 1979;
 export const RITUAL_CHAIN_HEX = "0x7bb";
+export const RITUAL_HTTP_RPC = "https://rpc.ritualfoundation.org";
+export const RITUAL_WS_RPC = "wss://rpc.ritualfoundation.org";
+export const RITUAL_EXPLORER = "https://explorer.ritualfoundation.org";
+export const RITUAL_FAUCET = "https://faucet.ritualfoundation.org";
+
+export const RITUAL_NETWORK = {
+  chainId: RITUAL_CHAIN_HEX,
+  chainName: "Ritual Testnet",
+  nativeCurrency: { name: "RITUAL", symbol: "RITUAL", decimals: 18 },
+  rpcUrls: [RITUAL_HTTP_RPC],
+  blockExplorerUrls: [RITUAL_EXPLORER],
+} as const;
 
 export type EthereumProvider = {
   request: (args: { method: string; params?: unknown[] | object }) => Promise<unknown>;
@@ -32,15 +44,7 @@ export async function ensureRitualNetwork(provider: EthereumProvider) {
 
     await provider.request({
       method: "wallet_addEthereumChain",
-      params: [
-        {
-          chainId: RITUAL_CHAIN_HEX,
-          chainName: "Ritual",
-          nativeCurrency: { name: "RITUAL", symbol: "RITUAL", decimals: 18 },
-          rpcUrls: ["https://rpc.ritualfoundation.org"],
-          blockExplorerUrls: ["https://explorer.ritualfoundation.org"],
-        },
-      ],
+      params: [RITUAL_NETWORK],
     });
 
     await provider.request({
