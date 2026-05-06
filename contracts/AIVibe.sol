@@ -31,19 +31,28 @@ contract AIVibe is PrecompileConsumer {
     mapping(address => VibeScore) public scores;
     mapping(address => mapping(bytes32 => PendingScore)) public pendingScores;
 
+    address public owner;
     address public immutable ritualWallet;
     address public factory;
 
     event VibeScoreSubmitted(address indexed token, bytes32 indexed jobId, address indexed requester);
     event VibeScored(address indexed token, uint8 vibeRating, uint8 rugRisk, string summary);
+    event FactoryUpdated(address indexed previousFactory, address indexed newFactory);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "OWNER");
+        _;
+    }
 
     constructor(address _wallet) {
+        owner = msg.sender;
         ritualWallet = _wallet;
     }
 
-    function setFactory(address _factory) external {
-        require(factory == address(0), "FACTORY_SET");
+    function setFactory(address _factory) external onlyOwner {
+        address previousFactory = factory;
         factory = _factory;
+        emit FactoryUpdated(previousFactory, _factory);
     }
 
     function scoreToken(address token, bytes calldata encodedLlmPayload) external returns (bytes32 jobId) {
