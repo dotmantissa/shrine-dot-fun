@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import WalletConnectButton from "../../components/WalletConnectButton";
 import { useRitualWallet } from "../../hooks/useRitualWallet";
 import { contracts } from "../../lib/contracts";
@@ -10,9 +10,14 @@ import { launchTokenOnchain } from "../../lib/onchain";
 export default function CreatePage() {
   const router = useRouter();
   const wallet = useRitualWallet();
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", symbol: "", description: "", twitterHandle: "", totalTokensToMint: "" });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,6 +58,8 @@ export default function CreatePage() {
       setLoading(false);
     }
   }
+
+  if (!mounted) return null;
 
   return (
     <main className="create-main">

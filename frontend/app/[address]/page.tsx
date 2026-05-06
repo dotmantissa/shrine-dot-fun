@@ -26,6 +26,7 @@ type Token = {
 export default function TokenPage({ params }: { params: { address: string } }) {
   const router = useRouter();
   const wallet = useRitualWallet();
+  const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<Token | null>(null);
   const [trades, setTrades] = useState<Array<{ side: string; amount: string; at: number }>>([]);
   const [points, setPoints] = useState<Array<{ t: number; p: number }>>([]);
@@ -36,6 +37,10 @@ export default function TokenPage({ params }: { params: { address: string } }) {
     setTrades(d.trades ?? []);
     setPoints(d.points ?? []);
   }
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     load();
@@ -52,6 +57,7 @@ export default function TokenPage({ params }: { params: { address: string } }) {
     await load();
   }
 
+  if (!mounted) return null;
   if (!token) return <main style={{ padding: 24, color: "var(--deep)" }}>Loading token...</main>;
 
   return (

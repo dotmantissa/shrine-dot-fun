@@ -35,11 +35,16 @@ const TICKER = [
 export default function HomePage() {
   const router = useRouter();
   const wallet = useRitualWallet();
+  const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [insightIndex, setInsightIndex] = useState(0);
   const [tokens, setTokens] = useState<Token[]>([]);
   const [tab, setTab] = useState<"Trending" | "New" | "Near graduation" | "Graduated">("Trending");
   const [sortBy, setSortBy] = useState<"market" | "vibe" | "curve">("market");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("shrine-theme");
@@ -90,6 +95,8 @@ export default function HomePage() {
     }
     return <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 4a1 1 0 0 1 1 1v1.5a1 1 0 0 1-2 0V5a1 1 0 0 1 1-1Zm0 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8-5a1 1 0 0 1 0 2h-1.5a1 1 0 0 1 0-2H20ZM6.5 12a1 1 0 0 1-1 1H4a1 1 0 1 1 0-2h1.5a1 1 0 0 1 1 1Zm10.3-5.3a1 1 0 0 1 1.4 0l1.1 1.1a1 1 0 1 1-1.4 1.4l-1.1-1.1a1 1 0 0 1 0-1.4Zm-10.7 10.7a1 1 0 0 1 1.4 0l1.1 1.1a1 1 0 0 1-1.4 1.4l-1.1-1.1a1 1 0 0 1 0-1.4Zm0-10.7a1 1 0 0 1 1.4 1.4L6.4 9.2A1 1 0 0 1 5 7.8l1.1-1.1Zm10.7 10.7a1 1 0 0 1 1.4 1.4l-1.1 1.1a1 1 0 0 1-1.4-1.4l1.1-1.1ZM12 17.5a1 1 0 0 1 1 1V20a1 1 0 1 1-2 0v-1.5a1 1 0 0 1 1-1Z"/></svg>;
   }
+
+  if (!mounted) return null;
 
   return (
     <>
