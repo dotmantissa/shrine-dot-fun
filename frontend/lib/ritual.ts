@@ -1,12 +1,19 @@
 import { defineChain } from "viem";
-import { RITUAL_EXPLORER, RITUAL_HTTP_RPC } from "./wallet";
 
 export const ritualChain = defineChain({
   id: 1979,
-  name: "Ritual Testnet",
+  name: "Ritual",
   nativeCurrency: { name: "RITUAL", symbol: "RITUAL", decimals: 18 },
-  rpcUrls: { default: { http: [RITUAL_HTTP_RPC] } },
+  rpcUrls: {
+    default: { http: ["https://rpc.ritualfoundation.org"] },
+  },
   blockExplorers: {
-    default: { name: "Ritual Explorer", url: RITUAL_EXPLORER },
+    default: {
+      name: "Ritual Explorer",
+      url: "https://explorer.ritualfoundation.org",
+    },
+  },
+  fees: {
+    baseFeeMultiplier: 1.2,
   },
 });

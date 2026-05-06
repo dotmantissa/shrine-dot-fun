@@ -26,7 +26,7 @@ contract BondingCurveTest is Test {
         pass = new ShrinePass(address(router));
         router.setShrinePass(address(pass));
 
-        token = new ShrineToken("m","m","d","i","t",creator);
+        token = new ShrineToken("m","m",1_000_000_000e18,"d","i","t",creator);
         curve = new BondingCurve(address(token), treasury, creator, address(router));
         token.setCurve(address(curve));
     }

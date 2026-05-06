@@ -11,11 +11,12 @@ import {
   parseAbiItem,
   parseUnits,
   http,
+  parseGwei,
 } from "viem";
 import { getEthereum, RITUAL_CHAIN_ID } from "./wallet";
 
 const FACTORY_ABI = parseAbi([
-  "function deployToken(string name,string symbol,string description,string imageURI,string twitterHandle) returns (address token,address curve)",
+  "function deployToken(string name,string symbol,string description,string imageURI,string twitterHandle,uint256 totalSupply) returns (address token,address curve)",
 ]);
 
 const CURVE_ABI = parseAbi([
@@ -53,20 +54,6 @@ export function getClients() {
   return { wallet, pub };
 }
 
-function estimateValueForTargetMint(targetTokens: bigint) {
-  const vR = 30n * 10n ** 18n;
-  const vT = 1_073_000_191n * 10n ** 18n;
-  const k = vR * vT;
-  const safeTarget = targetTokens >= vT ? vT - 1n : targetTokens;
-  if (safeTarget <= 0n) return 0n;
-
-  const newVT = vT - safeTarget;
-  const newVR = k / newVT;
-  const amountInNoFee = newVR > vR ? newVR - vR : 0n;
-
-  return (amountInNoFee * 10_000n + 9_899n) / 9_900n;
-}
-
 export async function launchTokenOnchain(args: {
   factory: `0x${string}`;
   account: `0x${string}`;
@@ -75,17 +62,20 @@ export async function launchTokenOnchain(args: {
   description: string;
   imageURI: string;
   twitterHandle: string;
-  totalTokensToMint?: string;
+  totalSupply: string;
 }) {
   const { wallet, pub } = getClients();
+  const supply = parseUnits(args.totalSupply, 18);
 
   const hash = await wallet.writeContract({
     address: getAddress(args.factory),
     abi: FACTORY_ABI,
     functionName: "deployToken",
-    args: [args.name, args.symbol, args.description, args.imageURI, args.twitterHandle],
+    args: [args.name, args.symbol, args.description, args.imageURI, args.twitterHandle, supply],
     account: getAddress(args.account),
     type: "eip1559",
+    maxFeePerGas: parseGwei("2"),
+    maxPriorityFeePerGas: parseGwei("1"),
     chain: null,
   });
 
@@ -106,26 +96,6 @@ export async function launchTokenOnchain(args: {
 
   if (!token || !curve) throw new Error("TokenLaunched event not found in receipt");
 
-  const qty = args.totalTokensToMint?.trim();
-  if (qty && Number(qty) > 0) {
-    const target = parseUnits(qty, 18);
-    const value = estimateValueForTargetMint(target);
-    if (value > 0n) {
-      const minOut = (target * 97n) / 100n;
-      const buyHash = await wallet.writeContract({
-        address: curve,
-        abi: CURVE_ABI,
-        functionName: "buy",
-        args: [minOut],
-        value,
-        account: getAddress(args.account),
-        type: "eip1559",
-        chain: null,
-      });
-      await pub.waitForTransactionReceipt({ hash: buyHash });
-    }
-  }
-
   return { hash, token, curve };
 }
 
@@ -144,6 +114,8 @@ export async function buyOnchain(args: {
     value,
     account: getAddress(args.account),
     type: "eip1559",
+    maxFeePerGas: parseGwei("2"),
+    maxPriorityFeePerGas: parseGwei("1"),
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash });
@@ -166,6 +138,8 @@ export async function sellOnchain(args: {
     args: [getAddress(args.curve), amount],
     account: getAddress(args.account),
     type: "eip1559",
+    maxFeePerGas: parseGwei("2"),
+    maxPriorityFeePerGas: parseGwei("1"),
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash: approveHash });
@@ -177,6 +151,8 @@ export async function sellOnchain(args: {
     args: [amount, 0n],
     account: getAddress(args.account),
     type: "eip1559",
+    maxFeePerGas: parseGwei("2"),
+    maxPriorityFeePerGas: parseGwei("1"),
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash: sellHash });

@@ -20,7 +20,7 @@ contract ShrineFactoryTest is Test {
 
     function testDeployToken() public {
         vm.mockCall(address(0x0800), abi.encode("meme", "MEME"), abi.encode(true));
-        (address token, address curve) = factory.deployToken("meme", "MEME", "desc", "ipfs://x", "@x");
+        (address token, address curve) = factory.deployToken("meme", "MEME", "desc", "ipfs://x", "@x", 1_000_000_000e18);
         assertTrue(token != address(0));
         assertTrue(curve != address(0));
         assertEq(factory.tokenToCurve(token), curve);

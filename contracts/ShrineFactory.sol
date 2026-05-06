@@ -51,17 +51,25 @@ contract ShrineFactory {
         string calldata symbol,
         string calldata description,
         string calldata imageURI,
-        string calldata twitterHandle
+        string calldata twitterHandle,
+        uint256 totalSupply
     ) external returns (address token, address curve) {
+        require(totalSupply >= 1_000_000e18, "Min supply: 1M tokens");
+        require(totalSupply <= 1_000_000_000e18, "Max supply: 1B tokens");
         require(contentGuard.checkContent(name, symbol), "UNSAFE_CONTENT");
-        ShrineToken t = new ShrineToken(name, symbol, description, imageURI, twitterHandle, msg.sender);
+        ShrineToken t = new ShrineToken(name, symbol, totalSupply, description, imageURI, twitterHandle, msg.sender);
         BondingCurve c = new BondingCurve(address(t), treasury, msg.sender, dexRouter);
         t.setCurve(address(c));
 
         token = address(t);
         curve = address(c);
         tokenToCurve[token] = curve;
-        metadata[token] = TokenMeta(name, symbol, description, imageURI, twitterHandle);
+        TokenMeta storage meta = metadata[token];
+        meta.name = name;
+        meta.symbol = symbol;
+        meta.description = description;
+        meta.imageURI = imageURI;
+        meta.twitterHandle = twitterHandle;
 
         emit TokenLaunched(token, curve, msg.sender, block.timestamp, twitterHandle);
     }

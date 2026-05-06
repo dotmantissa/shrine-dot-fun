@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buyOnchain, sellOnchain } from "../lib/onchain";
 
 export default function TradePanel({
@@ -22,6 +22,11 @@ export default function TradePanel({
   const [amount, setAmount] = useState("1");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const estimatedTokens = useMemo(() => {
     const p = Number(token.price);
@@ -67,6 +72,8 @@ export default function TradePanel({
       setBusy(false);
     }
   }
+
+  if (!mounted) return null;
 
   return (
     <div style={{ border: "1px solid var(--line)", padding: 10, display: "grid", gap: 8 }}>

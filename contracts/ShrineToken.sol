@@ -6,7 +6,7 @@ contract ShrineToken {
     string public symbol;
     uint8 public constant decimals = 18;
     uint256 public totalSupply;
-    uint256 public constant MAX_SUPPLY = 1_000_000_000e18;
+    uint256 public maxSupply;
 
     address public curve;
     address public dexRouter;
@@ -30,6 +30,7 @@ contract ShrineToken {
     constructor(
         string memory _name,
         string memory _symbol,
+        uint256 _maxSupply,
         string memory _description,
         string memory _imageURI,
         string memory _twitterHandle,
@@ -37,6 +38,7 @@ contract ShrineToken {
     ) {
         name = _name;
         symbol = _symbol;
+        maxSupply = _maxSupply;
         description = _description;
         imageURI = _imageURI;
         twitterHandle = _twitterHandle;
@@ -73,7 +75,7 @@ contract ShrineToken {
     }
 
     function mint(address to, uint256 amount) external onlyCurve {
-        require(totalSupply + amount <= MAX_SUPPLY, "MAX_SUPPLY");
+        require(totalSupply + amount <= maxSupply, "MAX_SUPPLY");
         totalSupply += amount;
         balanceOf[to] += amount;
         emit Transfer(address(0), to, amount);

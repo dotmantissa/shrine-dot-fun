@@ -13,7 +13,7 @@ export default function CreatePage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", symbol: "", description: "", twitterHandle: "", totalTokensToMint: "" });
+  const [form, setForm] = useState({ name: "", symbol: "", description: "", twitterHandle: "", totalSupply: "" });
 
   useEffect(() => {
     setMounted(true);
@@ -37,6 +37,11 @@ export default function CreatePage() {
       setError("Wallet account is unavailable.");
       return;
     }
+    const supplyNum = Number(form.totalSupply);
+    if (!form.totalSupply || !Number.isFinite(supplyNum) || supplyNum < 1_000_000 || supplyNum > 1_000_000_000) {
+      setError("Total supply must be between 1,000,000 and 1,000,000,000 tokens.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -48,7 +53,7 @@ export default function CreatePage() {
         description: form.description,
         imageURI: "",
         twitterHandle: form.twitterHandle,
-        totalTokensToMint: form.totalTokensToMint,
+        totalSupply: form.totalSupply,
       });
       router.push(`/${launched.token}`);
       return;
@@ -107,13 +112,18 @@ export default function CreatePage() {
             <input style={{ border: "1px solid var(--line)", padding: "10px", background: "transparent", color: "var(--ink)" }} placeholder="@spiritmoth" value={form.twitterHandle} onChange={(e) => setForm((f) => ({ ...f, twitterHandle: e.target.value }))} />
           </label>
           <label style={{ display: "grid", gap: 4 }}>
-            <span style={{ font: "400 10px 'DM Mono', monospace", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--mid)" }}>Total Tokens To Mint (On-chain)</span>
+            <span style={{ font: "400 10px 'DM Mono', monospace", letterSpacing: ".12em", textTransform: "uppercase", color: "var(--mid)" }}>Total Supply *</span>
             <input
               style={{ border: "1px solid var(--line)", padding: "10px", background: "transparent", color: "var(--ink)" }}
-              placeholder="1000000"
-              value={form.totalTokensToMint}
-              onChange={(e) => setForm((f) => ({ ...f, totalTokensToMint: e.target.value }))}
+              type="number"
+              min="1000000"
+              max="1000000000"
+              required
+              placeholder="e.g. 1000000000"
+              value={form.totalSupply}
+              onChange={(e) => setForm((f) => ({ ...f, totalSupply: e.target.value }))}
             />
+            <span style={{ font: "400 10px 'DM Mono', monospace", color: "var(--mid)" }}>Min: 1,000,000 · Max: 1,000,000,000</span>
           </label>
 
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>

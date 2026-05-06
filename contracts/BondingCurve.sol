@@ -45,7 +45,7 @@ contract BondingCurve {
         uint256 newVirtualRitual = virtualRITUAL + amountIn;
         uint256 newVirtualToken = k / newVirtualRitual;
         tokensOut = virtualToken - newVirtualToken;
-        uint256 available = token.MAX_SUPPLY() - token.totalSupply();
+        uint256 available = token.maxSupply() - token.totalSupply();
         if (tokensOut > available) {
             tokensOut = available;
         }
@@ -92,7 +92,7 @@ contract BondingCurve {
         require(realRitualReserve >= graduationThreshold, "NOT_READY");
         graduated = true;
 
-        uint256 remaining = token.MAX_SUPPLY() - token.totalSupply();
+        uint256 remaining = token.maxSupply() - token.totalSupply();
         if (remaining > 0) token.mint(address(this), remaining);
 
         token.setDexRouter(dexRouter);
