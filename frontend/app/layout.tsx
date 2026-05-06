@@ -1,6 +1,8 @@
+import { Providers } from "./providers";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Jost:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
@@ -11,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           a { color: inherit; }
           input, textarea, select, button { font: inherit; }
         `}</style>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

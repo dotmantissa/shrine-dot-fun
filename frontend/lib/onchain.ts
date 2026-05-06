@@ -73,9 +73,8 @@ export async function launchTokenOnchain(args: {
     functionName: "deployToken",
     args: [args.name, args.symbol, args.description, args.imageURI, args.twitterHandle, supply],
     account: getAddress(args.account),
-    type: "eip1559",
-    maxFeePerGas: parseGwei("2"),
-    maxPriorityFeePerGas: parseGwei("1"),
+    gas: 500_000n,
+    gasPrice: parseGwei("2"),
     chain: null,
   });
 
@@ -113,9 +112,8 @@ export async function buyOnchain(args: {
     args: [0n],
     value,
     account: getAddress(args.account),
-    type: "eip1559",
-    maxFeePerGas: parseGwei("2"),
-    maxPriorityFeePerGas: parseGwei("1"),
+    gas: 400_000n,
+    gasPrice: parseGwei("2"),
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash });
@@ -137,9 +135,8 @@ export async function sellOnchain(args: {
     functionName: "approve",
     args: [getAddress(args.curve), amount],
     account: getAddress(args.account),
-    type: "eip1559",
-    maxFeePerGas: parseGwei("2"),
-    maxPriorityFeePerGas: parseGwei("1"),
+    gas: 200_000n,
+    gasPrice: parseGwei("2"),
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash: approveHash });
@@ -150,9 +147,8 @@ export async function sellOnchain(args: {
     functionName: "sell",
     args: [amount, 0n],
     account: getAddress(args.account),
-    type: "eip1559",
-    maxFeePerGas: parseGwei("2"),
-    maxPriorityFeePerGas: parseGwei("1"),
+    gas: 400_000n,
+    gasPrice: parseGwei("2"),
     chain: null,
   });
   await pub.waitForTransactionReceipt({ hash: sellHash });

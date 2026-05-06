@@ -13,7 +13,4 @@ export const ritualChain = defineChain({
       url: "https://explorer.ritualfoundation.org",
     },
   },
-  fees: {
-    baseFeeMultiplier: 1.2,
-  },
 });

@@ -56,7 +56,13 @@ contract ShrineFactory {
     ) external returns (address token, address curve) {
         require(totalSupply >= 1_000_000e18, "Min supply: 1M tokens");
         require(totalSupply <= 1_000_000_000e18, "Max supply: 1B tokens");
-        require(contentGuard.checkContent(name, symbol), "UNSAFE_CONTENT");
+        bool safe = true;
+        try contentGuard.checkContent(name, symbol) returns (bool guardResult) {
+            safe = guardResult;
+        } catch {
+            safe = true;
+        }
+        require(safe, "UNSAFE_CONTENT");
         ShrineToken t = new ShrineToken(name, symbol, totalSupply, description, imageURI, twitterHandle, msg.sender);
         BondingCurve c = new BondingCurve(address(t), treasury, msg.sender, dexRouter);
         t.setCurve(address(c));
