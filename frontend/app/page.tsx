@@ -159,7 +159,7 @@ export default function HomePage() {
 
       <div className="wrap">
         <div className="header">
-          <div className="logo">Shine <span className="dot">.dot.</span> FUN</div>
+          <div className="logo">Shrine <span className="dot">.dot.</span> FUN</div>
           <div className="nav">
             <a href="#" onClick={(e) => { e.preventDefault(); setTab("Trending"); }}>Market</a>
             <a href="#" onClick={(e) => { e.preventDefault(); setTab("Graduated"); }}>Graduated</a>
